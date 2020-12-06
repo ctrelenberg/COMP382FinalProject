@@ -2,7 +2,9 @@
 
 %{
 #include <iostream>
-#include <cstdlib>
+#include <string>
+#include <vector>
+#include <algorithm>
 %}
 
 all_chars (.\n)
@@ -22,7 +24,7 @@ digit [0-9]
     Pattern definitions for all tokens
   */
 
-"//"{char_no_nl}*\n                 { return 7; }
+"//"{char_no_nl}*\n                   { return 7; }
 &&				                    { return 1; }
 =					                { return 2; }
 bool					            { return 3; }
@@ -76,8 +78,27 @@ while					            { return 49; }
 . 			                        { std::cerr << "Error: unexpected character in input.\n"; return -1; }
 %%
 
-int main () {
-    int token;
+template<typename Iterable, typename V>
+bool contains(const Iterable& container, const V value) {
+    return (std::find(container.begin(), container.end(), value) != container.end());
+}
+
+// Few helper functions that make string processing nicer in C++.
+auto rstrip(const std::string& container, const char value) -> std::string {
+    const auto begin = container.cbegin();
+    const auto end = std::find_if(container.crbegin(), container.crend(), [value](char v) { return v != value; }).base();
+    return std::string(begin, end);
+}
+
+std::string newline_lexeme(const std::string& lexeme, bool print_newlines) {
+    if (!print_newlines) return lexeme;
+    return rstrip(lexeme, '\n') + "\\n";
+}
+
+int main (int argc, char* argv[]) {
+    std::vector<std::string> args(argv + 1, argv + argc);
+    auto print_newlines = contains(args, "--literal-newlines");
+    int token{};
     std::string lexeme;
     yyFlexLexer lexer{};
     while ((token = lexer.yylex())) {
@@ -90,7 +111,7 @@ int main () {
                 case 4: std::cout << "T_BREAK " << lexeme << std::endl; break;
                 case 5: std::cout << "T_CHARCONSTANT " << lexeme << std::endl; break;
                 case 6: std::cout << "T_COMMA " << lexeme << std::endl; break;
-                case 7: std::cout << "T_COMMENT " << lexeme << std::endl; break;
+                case 7: std::cout << "T_COMMENT " << newline_lexeme(lexeme, print_newlines) << std::endl; break;
                 case 8: std::cout << "T_CONTINUE " << lexeme << std::endl; break;
                 case 9: std::cout << "T_DIV " << lexeme << std::endl; break;
                 case 10: std::cout << "T_DOT " << lexeme << std::endl; break;
