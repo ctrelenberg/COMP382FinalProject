@@ -22,13 +22,13 @@ digit [0-9]
     Pattern definitions for all tokens
   */
 
-&{2}				                { return 1; }
+"//".*\n        { return 7; }
+&&				                    { return 1; }
 =					                { return 2; }
 bool					            { return 3; }
 break					            { return 4; }
 '({char_lit_chars}|{escaped_char})' { return 5; }
 ,					                { return 6; }
-\/{2}(char_no_nl)*'\n'			    { return 7; }
 continue				            { return 8; }
 \/					                { return 9; }
 \.					                { return 10; }
