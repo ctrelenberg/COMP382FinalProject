@@ -69,10 +69,10 @@ return					            { return 39; }
 \)					                { return 41; }
 \]					                { return 42; }
 \;					                { return 43; }
-\"({char}|{escaped_char})\"		    { return 44; }
+\"({chars}|{escaped_char})\"		{ return 44; }
 \"[^\\\n]*\\[^abtvfr\\'\"].*\"      { return 300; }
-\".*\n.*\"                         { return 301; }
-\".*\n                             { return 302; }
+\".*\n.*\"                          { return 301; }
+\".*\n                              { return 302; }
 string					            { return 45; }
 true					            { return 46; }
 var					                { return 47; }
