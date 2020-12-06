@@ -5,8 +5,8 @@ COMPILER_FLAGS=-std=c++11
 
 all: build
 
-%.yy.cc: %.lex
-	$(FLEX_PREPROCESSOR) $@ $(FLEX_FLAGS)
+lex.yy.cc:
+	$(FLEX_PREPROCESSOR) decaflex.lex $(FLEX_FLAGS)
 
 build: lex.yy.cc
 	$(COMPILER) $(COMPILER_FLAGS) lex.yy.cc
