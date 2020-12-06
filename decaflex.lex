@@ -30,6 +30,9 @@ digit [0-9]
 bool					            { return 3; }
 break					            { return 4; }
 '({char_lit_chars}|{escaped_char})' { return 5; }
+'..+'                               { return 303; }
+'.                                  { return 304; }
+''                                  { return 305; }
 ,					                { return 6; }
 continue				            { return 8; }
 \/					                { return 9; }
@@ -67,6 +70,9 @@ return					            { return 39; }
 \]					                { return 42; }
 \;					                { return 43; }
 `"`({char}|{escaped_char})`"`		{ return 44; }
+`"`[^\\\n]*\\[^abtvfr\\'\"].*`"`    { return 300; }
+`"`.*\n.*`"`                        { return 301; }
+`"`.*\n                             { return 302; }
 string					            { return 45; }
 true					            { return 46; }
 var					                { return 47; }
@@ -156,6 +162,12 @@ int main (int argc, char* argv[]) {
                 case 49: std::cout << "T_WHILE " << lexeme << std::endl; break;
                 case 50: std::cout << "T_WHITESPACE " << lexeme << std::endl; break;
                 case 51: std::cout << "T_WHITESPACE \\n" << std::endl; break;
+                case 300: std::cout << "Error: unknown escape sequence in string constant"
+                case 301: std::cout << "Error: newline in string constant";
+                case 302: std::cout << "Error: string constant is missing closing delimiter";
+                case 303: std::cout << "Error: char constant length is greater than one";
+                case 304: std::cout << "Error: unterminated char constant";
+                case 305: std::cout << "Error: char constant has zero width";
                 default: return EXIT_FAILURE;
             }
         } else {
