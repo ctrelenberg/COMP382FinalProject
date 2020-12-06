@@ -1,4 +1,4 @@
-%option C++ 
+%option C++ noyywrap
 
 %{
 #include <iostream>
@@ -79,10 +79,11 @@ while					            { return 49; }
 int main () {
     int token;
     std::string lexeme;
-    while ((token = yylex())) {
+    yyFlexLexer lexer{};
+    while ((token = lexer.yylex())) {
         if (token > 0) {
-            lexeme.assign(yytext);
-            switch(token) {
+            lexeme = lexer.YYText();
+            switch (token) {
                 case 1: std::cout << "T_AND " << lexeme << std::endl; break;
                 case 2: std::cout << "T_ASSIGN " << lexeme << std::endl; break;
                 case 3: std::cout << "T_BOOLTYPE " << lexeme << std::endl; break;
