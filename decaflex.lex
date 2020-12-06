@@ -40,7 +40,6 @@ for					                { return 15; }
 func					            { return 16; }
 >=					                { return 17; }
 >					                { return 18; }
-{letter}({letter}|{digit})*			{ return 19; }
 if					                { return 20; }
 {decimal_digit}+|0(x|X){hex_digit}+	{ return 21; }
 int					                { return 22; }
@@ -73,6 +72,7 @@ void					            { return 48; }
 while					            { return 49; }
 [\t\r\a\v\b ]+				        { return 50; }
 \n					                { return 51; }
+{letter}({letter}|{digit})*			{ return 19; }
 . 			                        { std::cerr << "Error: unexpected character in input.\n"; return -1; }
 %%
 
