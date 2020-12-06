@@ -19,10 +19,10 @@ char_no_nl "\a"|"\b"|"\t"|"\v"|"\f"|"\r"|" "|"!"|`"`|"#"|"$"|"%"|"&"|"'"|"("|")"
 
 escaped_char "\"("a"|"b"|"t"|"n"|"v"|"f"|"r"|`\`|"'"|`"`)
 
-letter "A"..."Z"|"a"..."z"|"_"
-decimal_digit "0"..."9"
-hex_digit "0"..."9"|"A"..."F"|"a"..."f"
-digit "0"..."9"
+letter [A-Za-z_]
+decimal_digit [0-9]
+hex_digit [0-9A-Fa-f]
+digit [0-9]
 
 
 %%
