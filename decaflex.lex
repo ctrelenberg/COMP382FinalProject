@@ -22,7 +22,7 @@ digit [0-9]
     Pattern definitions for all tokens
   */
 
-"//".*\n        { return 7; }
+"//"{char_no_nl}*\n                 { return 7; }
 &&				                    { return 1; }
 =					                { return 2; }
 bool					            { return 3; }

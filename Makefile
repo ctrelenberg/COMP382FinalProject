@@ -9,7 +9,7 @@ lex.yy.cc:
 	$(FLEX_PREPROCESSOR) decaflex.lex $(FLEX_FLAGS)
 
 build: lex.yy.cc
-	$(COMPILER) $(COMPILER_FLAGS) lex.yy.cc
+	$(COMPILER) $(COMPILER_FLAGS) lex.yy.cc && rm lex.yy.cc
 
 run: build
 	./a.out
