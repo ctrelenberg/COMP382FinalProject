@@ -69,10 +69,10 @@ return					            { return 39; }
 \)					                { return 41; }
 \]					                { return 42; }
 \;					                { return 43; }
-`"`({char}|{escaped_char})`"`		{ return 44; }
-`"`[^\\\n]*\\[^abtvfr\\'\"].*`"`    { return 300; }
-`"`.*\n.*`"`                        { return 301; }
-`"`.*\n                             { return 302; }
+\"({char}|{escaped_char})\"		    { return 44; }
+\"[^\\\n]*\\[^abtvfr\\'\"].*\"      { return 300; }
+\".*\n.*\"                         { return 301; }
+\".*\n                             { return 302; }
 string					            { return 45; }
 true					            { return 46; }
 var					                { return 47; }
@@ -162,12 +162,12 @@ int main (int argc, char* argv[]) {
                 case 49: std::cout << "T_WHILE " << lexeme << std::endl; break;
                 case 50: std::cout << "T_WHITESPACE " << lexeme << std::endl; break;
                 case 51: std::cout << "T_WHITESPACE \\n" << std::endl; break;
-                case 300: std::cout << "Error: unknown escape sequence in string constant"
-                case 301: std::cout << "Error: newline in string constant";
-                case 302: std::cout << "Error: string constant is missing closing delimiter";
-                case 303: std::cout << "Error: char constant length is greater than one";
-                case 304: std::cout << "Error: unterminated char constant";
-                case 305: std::cout << "Error: char constant has zero width";
+                case 300: std::cerr << "Error: unknown escape sequence in string constant\n"; break;
+                case 301: std::cerr << "Error: newline in string constant\n"; break;
+                case 302: std::cerr << "Error: string constant is missing closing delimiter\n"; break;
+                case 303: std::cerr << "Error: char constant length is greater than one\n"; break;
+                case 304: std::cerr << "Error: unterminated char constant\n"; break;
+                case 305: std::cerr << "Error: char constant has zero width\n"; break;
                 default: return EXIT_FAILURE;
             }
         } else {

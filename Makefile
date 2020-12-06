@@ -5,16 +5,16 @@ COMPILER_FLAGS=-std=c++11
 
 all: build
 
-lex.yy.cc:
+lex:
 	$(FLEX_PREPROCESSOR) decaflex.lex $(FLEX_FLAGS)
 
-build: lex.yy.cc
+build: lex
 	$(COMPILER) $(COMPILER_FLAGS) lex.yy.cc && rm lex.yy.cc
 
 run: build
 	./a.out
 
-.PHONY: clean
+.PHONY: clean lex
 
 clean:
 	rm lex.yy.cc a.out
