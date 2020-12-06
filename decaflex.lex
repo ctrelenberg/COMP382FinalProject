@@ -30,7 +30,7 @@ digit [0-9]
 =					                { return 2; }
 bool					            { return 3; }
 break					            { return 4; }
-"'"(char_lit_chars|escaped_char)"'"	{ return 5; }
+"'"({char_lit_chars}|{escaped_char})"'" { return 5; }
 ,					                { return 6; }
 \/{2}(char_no_nl)*'\n'			    { return 7; }
 continue				            { return 8; }
@@ -44,7 +44,7 @@ for					                { return 15; }
 func					            { return 16; }
 >=					                { return 17; }
 >					                { return 18; }
-letter(letter|digit)*			    { return 19; }
+{letter}({letter}|{digit})*			{ return 19; }
 if					                { return 20; }
 "{decimal_digit}+ | "0"("x"|"X"){hex_digit}+"	{ return 21; }
 int					                { return 22; }
@@ -69,7 +69,7 @@ return					            { return 39; }
 \)					                { return 41; }
 \]					                { return 42; }
 \;					                { return 43; }
-`"`{char | escaped_char}`"`		    { return 44; }
+`"`({char}|{escaped_char})`"`		{ return 44; }
 string					            { return 45; }
 true					            { return 46; }
 var					                { return 47; }
