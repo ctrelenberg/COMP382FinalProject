@@ -6,8 +6,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm>
 #include <array>
+#include <algorithm>
+#include <unordered_set>
 %}
 
 all_chars (.\n)
@@ -89,8 +90,10 @@ while					            { return 49; }
 %%
 
 struct Token {
+    Token(const char* s) : str(s) {}
+    Token(std::string s) : str(std::move(s)) {}
     std::string str; 
-    bool escape_trailing_newlines = false; 
+    bool escape_trailing_newlines = false;
 };
 
 // A small wrapper class for the yyFlexLexer.
@@ -116,78 +119,55 @@ private:
 int main (int argc, char* argv[]) {
     // Configuration / command-line arguments.
     std::vector<std::string> args(argv + 1, argv + argc);
-    auto print_newlines = contains(args, "--literal-newlines");
+    auto escape_trailing_newlines = contains(args, "--literal-newlines");
     auto exit_error = contains(args, "--exiting-errors");
     auto keep_tabs = contains(args, "--keep-tabs");
 
+    std::vector<Token> tokens {
+        "T_AND", "T_ASSIGN", "T_BOOLTYPE", "T_BREAK", "T_CHARCONSTANT", 
+        "T_COMMA", "T_COMMENT", "T_CONTINUE", "T_DIV", "T_DOT", "T_ELSE", "T_EQ", "T_EXTERN", 
+        "T_FALSE", "T_FOR", "T_FUNC", "T_GEQ", "T_GT", "T_ID", "T_IF", "T_INTCONSTANT", 
+        "T_INTTYPE", "T_LCB", "T_LEFTSHIFT", "T_LEQ", "T_LPAREN", "T_LSB", "T_LT", "T_MINUS", 
+        "T_MOD", "T_MULT", "T_NEQ", "T_NOT", "T_NULL", "T_OR", "T_PACKAGE", "T_PLUS", "T_RCB", 
+        "T_RETURN", "T_RIGHTSHIFT", "T_RPAREN", "T_RSB", "T_SEMICOLON", "T_STRINGCONSTANT", 
+        "T_STRINGTYPE", "T_TRUE", "T_VAR", "T_VOID", "T_WHILE"
+    };
+    std::unordered_set<int> escape_newlines_ids = { 7 };
+
     Lexer lexer;
     while (lexer.next()) {
-        if (lexer.token) {
-            const auto& lexeme = lexer.get_text();
-            switch (lexer.token) {
-                case 1: std::cout << "T_AND " << lexeme << std::endl; break;
-                case 2: std::cout << "T_ASSIGN " << lexeme << std::endl; break;
-                case 3: std::cout << "T_BOOLTYPE " << lexeme << std::endl; break;
-                case 4: std::cout << "T_BREAK " << lexeme << std::endl; break;
-                case 5: std::cout << "T_CHARCONSTANT " << lexeme << std::endl; break;
-                case 6: std::cout << "T_COMMA " << lexeme << std::endl; break;
-                case 7: std::cout << "T_COMMENT " << newline_lexeme(lexeme, print_newlines) << std::endl; break;
-                case 8: std::cout << "T_CONTINUE " << lexeme << std::endl; break;
-                case 9: std::cout << "T_DIV " << lexeme << std::endl; break;
-                case 10: std::cout << "T_DOT " << lexeme << std::endl; break;
-                case 11: std::cout << "T_ELSE " << lexeme << std::endl; break;
-                case 12: std::cout << "T_EQ " << lexeme << std::endl; break;
-                case 13: std::cout << "T_EXTERN " << lexeme << std::endl; break;
-                case 14: std::cout << "T_FALSE " << lexeme << std::endl; break;
-                case 15: std::cout << "T_FOR " << lexeme << std::endl; break;
-                case 16: std::cout << "T_FUNC " << lexeme << std::endl; break;
-                case 17: std::cout << "T_GEQ " << lexeme << std::endl; break;
-                case 18: std::cout << "T_GT " << lexeme << std::endl; break;
-                case 19: std::cout << "T_ID " << lexeme << std::endl; break;
-                case 20: std::cout << "T_IF " << lexeme << std::endl; break;
-                case 21: std::cout << "T_INTCONSTANT " << lexeme << std::endl; break;
-                case 22: std::cout << "T_INTTYPE " << lexeme << std::endl; break;
-                case 23: std::cout << "T_LCB " << lexeme << std::endl; break;
-                case 24: std::cout << "T_LEFTSHIFT " << lexeme << std::endl; break;
-                case 25: std::cout << "T_LEQ " << lexeme << std::endl; break;
-                case 26: std::cout << "T_LPAREN " << lexeme << std::endl; break;
-                case 27: std::cout << "T_LSB " << lexeme << std::endl; break;
-                case 28: std::cout << "T_LT " << lexeme << std::endl; break;
-                case 29: std::cout << "T_MINUS " << lexeme << std::endl; break;
-                case 30: std::cout << "T_MOD " << lexeme << std::endl; break;
-                case 31: std::cout << "T_MULT " << lexeme << std::endl; break;
-                case 32: std::cout << "T_NEQ " << lexeme << std::endl; break;
-                case 33: std::cout << "T_NOT " << lexeme << std::endl; break;
-                case 34: std::cout << "T_NULL " << lexeme << std::endl; break;
-                case 35: std::cout << "T_OR " << lexeme << std::endl; break;
-                case 36: std::cout << "T_PACKAGE " << lexeme << std::endl; break;
-                case 37: std::cout << "T_PLUS " << lexeme << std::endl; break;
-                case 38: std::cout << "T_RCB " << lexeme << std::endl; break;
-                case 39: std::cout << "T_RETURN " << lexeme << std::endl; break;
-                case 40: std::cout << "T_RIGHTSHIFT " << lexeme << std::endl; break;
-                case 41: std::cout << "T_RPAREN " << lexeme << std::endl; break;
-                case 42: std::cout << "T_RSB " << lexeme << std::endl; break;
-                case 43: std::cout << "T_SEMICOLON " << lexeme << std::endl; break;
-                case 44: std::cout << "T_STRINGCONSTANT " << lexeme << std::endl; break;
-                case 45: std::cout << "T_STRINGTYPE " << lexeme << std::endl; break;
-                case 46: std::cout << "T_TRUE " << lexeme << std::endl; break;
-                case 47: std::cout << "T_VAR " << lexeme << std::endl; break;
-                case 48: std::cout << "T_VOID " << lexeme << std::endl; break;
-                case 49: std::cout << "T_WHILE " << lexeme << std::endl; break;
-                case 50: std::cout << "T_WHITESPACE " << lexeme << std::endl; break;
-                case 51: std::cout << "T_WHITESPACE \\n" << std::endl; break;
-                case 300: std::cerr << "Error: unknown escape sequence in string constant" << std::endl; break;
-                case 301: std::cerr << "Error: newline in string constant" << std::endl; break;
-                case 302: std::cerr << "Error: string constant is missing closing delimiter" << std::endl; break;
-                case 303: std::cerr << "Error: char constant length is greater than one" << std::endl; break;
-                case 304: std::cerr << "Error: unterminated char constant" << std::endl; break;
-                case 305: std::cerr << "Error: char constant has zero width" << std::endl; break;
-                default: return EXIT_FAILURE;
+        if (lexer.token < 0) {
+            return EXIT_FAILURE;
+        }
+        const auto& lexeme = [&] {
+            const auto& l = lexer.get_text();
+            if (escape_newlines_ids.find(lexer.token) != escape_newlines_ids.end())
+            {
+                return newline_lexeme(l, escape_trailing_newlines);
             }
-        } else {
-            if (lexer.token < 0) {
-                return EXIT_FAILURE;
+            if (lexer.token == 50 && !keep_tabs) {
+                std::string temp = l;
+                temp.erase(std::remove(temp.begin(), temp.end(), '\t'), temp.end());
+                return temp;
             }
+            return l;
+        }();
+        if (lexeme.size() == 0) continue;
+        if ((lexer.token - 1) < tokens.size()) {
+            // In this case, we can translate it automatically
+            std::cout << tokens[lexer.token - 1].str << " " << lexeme << std::endl;
+            continue;
+        }
+        switch (lexer.token) {
+            case 50: std::cout << "T_WHITESPACE " << lexeme << std::endl; break;
+            case 51: std::cout << "T_WHITESPACE \\n" << std::endl; break;
+            case 300: std::cerr << "Error: unknown escape sequence in string constant" << std::endl; break;
+            case 301: std::cerr << "Error: newline in string constant" << std::endl; break;
+            case 302: std::cerr << "Error: string constant is missing closing delimiter" << std::endl; break;
+            case 303: std::cerr << "Error: char constant length is greater than one" << std::endl; break;
+            case 304: std::cerr << "Error: unterminated char constant" << std::endl; break;
+            case 305: std::cerr << "Error: char constant has zero width" << std::endl; break;
+            default: return EXIT_FAILURE;
         }
     }
     return EXIT_SUCCESS;
