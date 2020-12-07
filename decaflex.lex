@@ -73,8 +73,8 @@ return					            { return 39; }
 \;					                { return 43; }
 \"{str}*\n{str}*\"                  { return 301; /* Newline in string constant */ }
 \"{str}*\"		                    { return 44; /* String matcher */ }
-\"{str}*\\[^abtvfr\\\"]{str}*       { return 300; }
-\"(\\[abtnvfr\\\"]|[^\"\\\n])*\n      { return 302; /* String constant is missing closing delimiter */ }
+\"{str}*\\[^abtvfr\\\"][^\"]*\"       { return 300; }
+\"(\\[abtnvfr\\\"]|[^\"\\\n])*\n    { return 302; /* String constant is missing closing delimiter */ }
 string					            { return 45; }
 true					            { return 46; }
 var					                { return 47; }
