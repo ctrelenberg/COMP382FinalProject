@@ -24,14 +24,14 @@ digit [0-9]
     Pattern definitions for all tokens
   */
 
-"//"{char_no_nl}*\n                   { return 7; }
+"//"{char_no_nl}*\n                 { return 7; }
 &&				                    { return 1; }
 =					                { return 2; }
 bool					            { return 3; }
 break					            { return 4; }
 '({char_lit_chars}|{escaped_char})' { return 5; }
 '..+'                               { return 303; }
-'.                                  { return 304; }
+'[^']                               { return 304; }
 ''                                  { return 305; }
 ,					                { return 6; }
 continue				            { return 8; }
