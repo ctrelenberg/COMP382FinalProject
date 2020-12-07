@@ -1,18 +1,20 @@
 %option C++ noyywrap
 
 %{
+#include "tools.hpp" // Custom tools
+
 #include <iostream>
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <array>
 %}
 
 all_chars (.\n)
 chars [^\n\\1\"]
 char_lit_chars [^'\\]
 char_no_nl .
-str (\\[abtvfr\\\"]|[^\"\\\n])
-strnl (\\[abtvfrn\\\"]|[^\"\\\n])
+str (\\[abtvfrn\\\"]|[^\"\\\n])
 
 escaped_char (\\[abtnvfr\\'\"])
 
@@ -73,8 +75,8 @@ return					            { return 39; }
 \;					                { return 43; }
 \"{str}*\n{str}*\"                  { return 301; /* Newline in string constant */ }
 \"{str}*\"		                    { return 44; /* String matcher */ }
-\"{str}*\\[^abtvfr\\\"][^\"]*\"       { return 300; }
-\"(\\[abtnvfr\\\"]|[^\"\\\n])*\n    { return 302; /* String constant is missing closing delimiter */ }
+\"{str}*\\[^abtvfrn\\\"][^\"]*\"    { return 300; }
+\"(\\[abtnvfrn\\\"]|[^\"\\\n])*\n   { return 302; /* String constant is missing closing delimiter */ }
 string					            { return 45; }
 true					            { return 46; }
 var					                { return 47; }
@@ -86,33 +88,43 @@ while					            { return 49; }
 . 			                        { std::cerr << "Error: unexpected character in input.\n"; return -1; }
 %%
 
-template<typename Iterable, typename V>
-bool contains(const Iterable& container, const V value) {
-    return (std::find(container.begin(), container.end(), value) != container.end());
-}
+struct Token {
+    std::string str; 
+    bool escape_trailing_newlines = false; 
+};
 
-// Few helper functions that make string processing nicer in C++.
-auto rstrip(const std::string& container, const char value) -> std::string {
-    const auto begin = container.cbegin();
-    const auto end = std::find_if(container.crbegin(), container.crend(), [value](char v) { return v != value; }).base();
-    return std::string(begin, end);
-}
+// A small wrapper class for the yyFlexLexer.
+class Lexer {
+public:
+    int next() {
+        token = lexer.yylex();
+        if (token) text = lexer.YYText();
+        return token;
+    }
 
-std::string newline_lexeme(const std::string& lexeme, bool print_newlines) {
-    if (!print_newlines) return lexeme;
-    return rstrip(lexeme, '\n') + "\\n";
-}
+    const std::string& get_text() {
+        return text;
+    }
+
+    int token{0};
+    std::string text;
+
+private:
+    yyFlexLexer lexer;
+};
 
 int main (int argc, char* argv[]) {
+    // Configuration / command-line arguments.
     std::vector<std::string> args(argv + 1, argv + argc);
     auto print_newlines = contains(args, "--literal-newlines");
-    int token{};
-    std::string lexeme;
-    yyFlexLexer lexer{};
-    while ((token = lexer.yylex())) {
-        if (token > 0) {
-            lexeme = lexer.YYText();
-            switch (token) {
+    auto exit_error = contains(args, "--exiting-errors");
+    auto keep_tabs = contains(args, "--keep-tabs");
+
+    Lexer lexer;
+    while (lexer.next()) {
+        if (lexer.token) {
+            const auto& lexeme = lexer.get_text();
+            switch (lexer.token) {
                 case 1: std::cout << "T_AND " << lexeme << std::endl; break;
                 case 2: std::cout << "T_ASSIGN " << lexeme << std::endl; break;
                 case 3: std::cout << "T_BOOLTYPE " << lexeme << std::endl; break;
@@ -165,15 +177,15 @@ int main (int argc, char* argv[]) {
                 case 50: std::cout << "T_WHITESPACE " << lexeme << std::endl; break;
                 case 51: std::cout << "T_WHITESPACE \\n" << std::endl; break;
                 case 300: std::cerr << "Error: unknown escape sequence in string constant" << std::endl; break;
-                case 301: std::cerr << "Error: newline in string constant\n" << std::endl; break;
-                case 302: std::cerr << "Error: string constant is missing closing delimiter\n" << std::endl; break;
-                case 303: std::cerr << "Error: char constant length is greater than one\n" << std::endl; break;
-                case 304: std::cerr << "Error: unterminated char constant\n" << std::endl; break;
-                case 305: std::cerr << "Error: char constant has zero width\n" << std::endl; break;
+                case 301: std::cerr << "Error: newline in string constant" << std::endl; break;
+                case 302: std::cerr << "Error: string constant is missing closing delimiter" << std::endl; break;
+                case 303: std::cerr << "Error: char constant length is greater than one" << std::endl; break;
+                case 304: std::cerr << "Error: unterminated char constant" << std::endl; break;
+                case 305: std::cerr << "Error: char constant has zero width" << std::endl; break;
                 default: return EXIT_FAILURE;
             }
         } else {
-            if (token < 0) {
+            if (lexer.token < 0) {
                 return EXIT_FAILURE;
             }
         }
