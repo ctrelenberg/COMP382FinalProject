@@ -11,8 +11,10 @@ all_chars (.\n)
 chars [^\n\\1\"]
 char_lit_chars [^'\\]
 char_no_nl .
+str (\\[abtvfr\\\"]|[^\"\\\n])
+strnl (\\[abtvfrn\\\"]|[^\"\\\n])
 
-escaped_char \\(a|b|t|n|v|f|r|\\|'|\")
+escaped_char (\\[abtnvfr\\'\"])
 
 letter [A-Za-z_]
 decimal_digit [0-9]
@@ -69,10 +71,10 @@ return					            { return 39; }
 \)					                { return 41; }
 \]					                { return 42; }
 \;					                { return 43; }
-\"({chars}|{escaped_char})\"		{ return 44; }
-\"[^\\\n]*\\[^abtvfr\\'\"].*\"      { return 300; }
-\".*\n.*\"                          { return 301; }
-\".*\n                              { return 302; }
+\"{str}*\n{str}*\"                  { return 301; /* Newline in string constant */ }
+\"{str}*\"		                    { return 44; /* String matcher */ }
+\"{str}*\\[^abtvfr\\\"]{str}*       { return 300; }
+\"(\\[abtnvfr\\\"]|[^\"\\\n])*\n      { return 302; /* String constant is missing closing delimiter */ }
 string					            { return 45; }
 true					            { return 46; }
 var					                { return 47; }
@@ -162,12 +164,12 @@ int main (int argc, char* argv[]) {
                 case 49: std::cout << "T_WHILE " << lexeme << std::endl; break;
                 case 50: std::cout << "T_WHITESPACE " << lexeme << std::endl; break;
                 case 51: std::cout << "T_WHITESPACE \\n" << std::endl; break;
-                case 300: std::cerr << "Error: unknown escape sequence in string constant\n"; break;
-                case 301: std::cerr << "Error: newline in string constant\n"; break;
-                case 302: std::cerr << "Error: string constant is missing closing delimiter\n"; break;
-                case 303: std::cerr << "Error: char constant length is greater than one\n"; break;
-                case 304: std::cerr << "Error: unterminated char constant\n"; break;
-                case 305: std::cerr << "Error: char constant has zero width\n"; break;
+                case 300: std::cerr << "Error: unknown escape sequence in string constant" << std::endl; break;
+                case 301: std::cerr << "Error: newline in string constant\n" << std::endl; break;
+                case 302: std::cerr << "Error: string constant is missing closing delimiter\n" << std::endl; break;
+                case 303: std::cerr << "Error: char constant length is greater than one\n" << std::endl; break;
+                case 304: std::cerr << "Error: unterminated char constant\n" << std::endl; break;
+                case 305: std::cerr << "Error: char constant has zero width\n" << std::endl; break;
                 default: return EXIT_FAILURE;
             }
         } else {
