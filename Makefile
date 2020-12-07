@@ -1,7 +1,7 @@
 FLEX_PREPROCESSOR=lex
 FLEX_FLAGS=
 COMPILER=g++
-COMPILER_FLAGS=-std=c++17
+COMPILER_FLAGS=-std=c++11
 
 all: build
 
