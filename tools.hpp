@@ -5,6 +5,7 @@
  * This file contains a variety of useful C++ tools.
  */
 
+#include <vector>
 #include <algorithm>
 #include <string>
 
@@ -17,6 +18,12 @@ bool contains(const Iterable& container, const V value) {
 auto rstrip(const std::string& container, const char value) -> std::string {
     const auto begin = container.cbegin();
     const auto end = std::find_if(container.crbegin(), container.crend(), [value](char v) { return v != value; }).base();
+    return std::string(begin, end);
+}
+
+auto rstrip(const std::string& container, const std::vector<char>& value) -> std::string {
+    const auto begin = container.cbegin();
+    const auto end = std::find_if(container.crbegin(), container.crend(), [value](char v) { return !contains(value, v); }).base();
     return std::string(begin, end);
 }
 
