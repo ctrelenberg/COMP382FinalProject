@@ -1,0 +1,24 @@
+
+Error: unknown escape sequence in string constant
+Error: newline in string constant
+Error: string constant is missing closing delimiter
+Error: char constant length is greater than one
+Error: unterminated char constant
+Error: char constant has zero width
+Error: unexpected character in input
+
+output/dev/e1.err
+Error: unknown escape sequence in string constant
+Lexical error: line 11, position 21
+
+output/dev/e2.err
+Error: newline in string constant
+Lexical error: line 11, position 23
+
+output/dev/e3.err
+Error: newline in string constant
+Lexical error: line 11, position 21
+
+output/dev/e4.err
+Error: newline in string constant
+Lexical error: line 11, position 21

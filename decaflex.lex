@@ -124,6 +124,7 @@ int main (int argc, char* argv[]) {
     auto keep_tabs = contains(args, "--keep-tabs");
     auto canonical = contains(args, "--canonical");
     escape_trailing_newlines = canonical;
+    keep_tabs = canonical;
     auto suppress_generic = contains(args, "--quiet");
     auto verbose = contains(args, "--verbose");
 
