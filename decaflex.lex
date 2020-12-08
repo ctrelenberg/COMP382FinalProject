@@ -166,6 +166,7 @@ int main (int argc, char* argv[]) {
             const auto& l = lexer.get_text();
             const auto actual_line = lexer.lineno();
             
+            prev_line_pos = line_pos;
             // Save the previous position (start position) for error reporting.
             if (std::find(second_line_errors.begin(), second_line_errors.end(), lexer.token) 
                      != second_line_errors.end()) {
@@ -174,13 +175,10 @@ int main (int argc, char* argv[]) {
                 // code. So, we should retain that code.
                 curr_line += rstrip(l, std::vector<char>{'\n', ' ', '\t'});
             }
-            else {
-                prev_line_pos = line_pos;
-                if (actual_line != current_line) {
-                    current_line = actual_line;
-                    line_pos = 1;
-                    curr_line = "";
-                }
+            else if (actual_line != current_line) {
+                current_line = actual_line;
+                line_pos = 1;
+                curr_line = "";
             }
 
             if (!l.empty() && l[l.size() - 1] == '\n') {
