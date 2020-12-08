@@ -125,6 +125,7 @@ int main (int argc, char* argv[]) {
     auto canonical = contains(args, "--canonical");
     escape_trailing_newlines = canonical;
     auto suppress_generic = contains(args, "--quiet");
+    auto verbose = contains(args, "--verbose");
 
     std::vector<Token> tokens {
         "T_AND", "T_ASSIGN", "T_BOOLTYPE", "T_BREAK", "T_CHARCONSTANT", 
@@ -147,7 +148,7 @@ int main (int argc, char* argv[]) {
         "char constant has zero width",
         "unexpected character in input." 
     };
-    std::unordered_set<int> second_line_errors = { 302 };
+    std::unordered_set<int> second_line_errors = { 302, 301 };
 
     Lexer lexer;
     long line_pos = 1;
@@ -194,6 +195,7 @@ int main (int argc, char* argv[]) {
                 line_pos += l.size();
                 curr_line += l;
             }
+
             if (escape_newlines_ids.find(lexer.token) != escape_newlines_ids.end())
             {
                 return newline_lexeme(l, escape_trailing_newlines);
