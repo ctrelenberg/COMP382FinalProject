@@ -12,12 +12,11 @@
 %}
 
 all_chars (.\n)
-chars [^\n\\1\"]
 char_lit_chars [^'\\]
 char_no_nl .
 str (\\[abtvfrn\\\"]|[^\"\\\n])
 
-escaped_char (\\[abtnvfr\\'\"])
+escaped_char (\\[abtnvfr\\\"])
 
 letter [A-Za-z_]
 decimal_digit [0-9]
