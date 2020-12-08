@@ -95,6 +95,16 @@ struct Token {
     std::string str; 
 };
 
+struct OutputToken {
+    OutputToken(int id, std::string lexeme) : 
+        id(id),
+        lexeme_str(std::move(lexeme)) {}
+    OutputToken() : set(false) {}
+    int id{-1};
+    bool set{true};
+    std::string lexeme_str;
+};
+
 // A small wrapper class for the yyFlexLexer.
 class Lexer {
 public:
@@ -116,18 +126,14 @@ private:
     yyFlexLexer lexer;
 };
 
-int main (int argc, char* argv[]) {
-    // Configuration / command-line arguments.
-    std::vector<std::string> args(argv + 1, argv + argc);
-    auto escape_trailing_newlines = contains(args, "--literal-newlines");
-    auto exit_error = contains(args, "--exiting-errors");
-    auto keep_tabs = contains(args, "--keep-tabs");
-    auto canonical = contains(args, "--canonical");
-    escape_trailing_newlines = canonical;
-    keep_tabs = canonical;
-    auto suppress_generic = contains(args, "--quiet");
-    auto verbose = contains(args, "--verbose");
+int outputToken(OutputToken t, const bool suppress_generic, 
+                const bool canonical, const std::string curr_line,
+                const long current_line_pos, const long prev_line_pos) {
+    // Destructure arguments (as this is a quick refactor post-majority-of-project)
+    const auto& lexeme = t.lexeme_str;
+    const int token = t.id;
 
+    // Grab our constant information
     std::vector<Token> tokens {
         "T_AND", "T_ASSIGN", "T_BOOLTYPE", "T_BREAK", "T_CHARCONSTANT", 
         "T_COMMA", "T_COMMENT", "T_CONTINUE", "T_DIV", "T_DOT", "T_ELSE", "T_EQ", "T_EXTERN", 
@@ -137,10 +143,8 @@ int main (int argc, char* argv[]) {
         "T_RETURN", "T_RIGHTSHIFT", "T_RPAREN", "T_RSB", "T_SEMICOLON", "T_STRINGCONSTANT", 
         "T_STRINGTYPE", "T_TRUE", "T_VAR", "T_VOID", "T_WHILE", "T_WHITESPACE "
     };
-    std::unordered_set<int> escape_newlines_ids = { 7 };
-
     constexpr auto error_offset = 300;
-    std::vector<Token> errors {
+    const std::vector<Token> errors { // This could be static for better performance.
         "unknown escape sequence in string constant",
         "newline in string constant",
         "string constant is missing closing delimiter",
@@ -149,14 +153,72 @@ int main (int argc, char* argv[]) {
         "char constant has zero width",
         "unexpected character in input." 
     };
+
+    // Run the actual code for printing tokens.
+
+    // Lexeme size is 0 if we just found tabs, currently. No other reason.
+    if (lexeme.size() == 0) return EXIT_SUCCESS;
+
+    // This occurs if the lexeme directly corresponded to a token.
+    if ((token - 1) < tokens.size()) {
+        // In this case, we can translate it automatically
+        if (!suppress_generic)
+            std::cout << tokens[token - 1].str << " " << lexeme << std::endl;
+        return EXIT_SUCCESS;
+    }
+    else if (token == 51) {
+        if (!suppress_generic) std::cout << "T_WHITESPACE \\n" << std::endl;
+    }
+    else if (token >= error_offset && 
+             (token - error_offset) < errors.size()) {
+        // Properly format error message.
+        if (canonical) {
+            std::cerr << "Error: " << errors[token - error_offset].str << "\n";
+            std::cerr << "Lexical error: line " << current_line_pos;
+            std::cerr << ", position " << prev_line_pos << "\n";
+        }
+        else {
+            std::cerr << "Scanning failure: '" << rstrip(lexeme, '\n') << "':\n";
+            std::cerr << "(Position " << current_line_pos << ":" << prev_line_pos << ") ";
+            std::cerr << "Error #" << token << ": ";
+            std::cerr << errors[token - error_offset].str << "\n";
+            std::cerr << curr_line << std::endl;
+            for (int i = 0; i < prev_line_pos - 1; i++) std::cerr << '~';
+            std::cerr << "^\n";
+        }
+       
+    }
+    else {
+        std::cerr << "Unexpected token ID: " << token << std::endl; 
+        return EXIT_FAILURE;
+    }
+}
+
+int main (int argc, char* argv[]) {
+    // Configuration / command-line arguments.
+    std::vector<std::string> args(argv + 1, argv + argc);
+    auto escape_trailing_newlines = contains(args, "--literal-newlines");
+    auto exit_error = contains(args, "--exiting-errors");
+    auto keep_tabs = contains(args, "--keep-tabs");
+    auto canonical = contains(args, "--canonical");
+    auto group_whitespace = contains(args, "--group-whitespace");
+    escape_trailing_newlines = escape_trailing_newlines || canonical;
+    keep_tabs = keep_tabs || canonical;
+    group_whitespace = group_whitespace || canonical;
+    auto suppress_generic = contains(args, "--quiet");
+    auto verbose = contains(args, "--verbose");
+
+    std::unordered_set<int> escape_newlines_ids = { 7 };
+
     std::unordered_set<int> second_line_errors = { 302, 301 };
 
     Lexer lexer;
     long line_pos = 1;
     long prev_line_pos = 1;
-    long current_line = 0;
+    long current_line_pos = 0;
     auto ret = EXIT_SUCCESS;
     std::string curr_line;
+    OutputToken whitespace;
     while (lexer.next()) {
         /**
          * Get the lexeme that's been parsed using Flex.
@@ -177,8 +239,8 @@ int main (int argc, char* argv[]) {
                 // code. So, we should retain that code.
                 curr_line += rstrip(l, std::vector<char>{'\n', ' ', '\t'});
             }
-            else if (actual_line != current_line) {
-                current_line = actual_line;
+            else if (actual_line != current_line_pos) {
+                current_line_pos = actual_line;
                 line_pos = 1;
                 curr_line = "";
             }
@@ -192,7 +254,7 @@ int main (int argc, char* argv[]) {
                     curr_line = "";
                 }
             }
-            else if (current_line == actual_line) {
+            else if (current_line_pos == actual_line) {
                 line_pos += l.size();
                 curr_line += l;
             }
@@ -209,47 +271,10 @@ int main (int argc, char* argv[]) {
             return l;
         }();
 
-        // Lexeme size is 0 if we just found tabs, currently. No other reason.
-        if (lexeme.size() == 0) continue;
-
-        // This occurs if the lexeme directly corresponded to a token.
-        if ((lexer.token - 1) < tokens.size()) {
-            // In this case, we can translate it automatically
-            if (!suppress_generic)
-                std::cout << tokens[lexer.token - 1].str << " " << lexeme << std::endl;
-            continue;
-        }
-        else if (lexer.token == 51) {
-            if (!suppress_generic) std::cout << "T_WHITESPACE \\n" << std::endl;
-        }
-        else if (lexer.token >= error_offset && 
-                 (lexer.token - error_offset) < errors.size()) {
-            // Properly format error message.
-            if (canonical) {
-                std::cerr << "Error: " << errors[lexer.token - error_offset].str << "\n";
-                std::cerr << "Lexical error: line " << current_line;
-                std::cerr << ", position " << prev_line_pos << "\n";
-            }
-            else {
-                std::cerr << "Scanning failure: '" << rstrip(lexeme, '\n') << "':\n";
-                std::cerr << "(Position " << current_line << ":" << prev_line_pos << ") ";
-                std::cerr << "Error #" << lexer.token << ": ";
-                std::cerr << errors[lexer.token - error_offset].str << "\n";
-                std::cerr << curr_line << std::endl;
-                for (int i = 0; i < prev_line_pos - 1; i++) std::cerr << '~';
-                std::cerr << "^\n";
-            }
-           
-            if (exit_error) {
-                return EXIT_FAILURE;
-            }
-            else {
-                ret = EXIT_FAILURE;
-            }
-        }
-        else {
-            std::cerr << "Unexpected token ID: " << lexer.token << std::endl; 
-            return EXIT_FAILURE;
+        if (outputToken({lexer.token, lexeme}, suppress_generic, canonical, curr_line, current_line_pos, prev_line_pos) 
+            == EXIT_FAILURE) {
+            if (exit_error) return EXIT_FAILURE;
+            else ret = EXIT_FAILURE;
         }
     }
     return ret;
