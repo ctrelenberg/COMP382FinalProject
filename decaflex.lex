@@ -89,20 +89,35 @@ while					            { return 49; }
 . 			                        { return 306; }
 %%
 
+// Apologies for poor code formatting; .lex makes it difficult to autoformat.
+
 struct Token {
     Token(const char* s) : str(s) {}
     Token(std::string s) : str(std::move(s)) {}
     std::string str; 
 };
 
-struct OutputToken {
-    OutputToken(int id, std::string lexeme) : 
+struct OutputTokenState {
+    OutputTokenState(int id, std::string lexeme) : 
         id(id),
         lexeme_str(std::move(lexeme)) {}
-    OutputToken() : set(false) {}
+    OutputTokenState() : set(false) {}
+    OutputTokenState(int id, 
+                     std::string lexeme, 
+                     std::string curr_line, 
+                     long current_line_pos,
+                     long prev_line_pos) :
+                        id(id), lexeme_str(std::move(lexeme)),
+                        cl(curr_line), clp(current_line_pos),
+                        plp(prev_line_pos)
+                        {}
     int id{-1};
     bool set{true};
     std::string lexeme_str;
+
+    std::string cl;
+    long clp{};
+    long plp{};
 };
 
 // A small wrapper class for the yyFlexLexer.
@@ -126,7 +141,7 @@ private:
     yyFlexLexer lexer;
 };
 
-int outputToken(OutputToken t, const bool suppress_generic, 
+int outputToken(OutputTokenState t, const bool suppress_generic, 
                 const bool canonical, const std::string curr_line,
                 const long current_line_pos, const long prev_line_pos) {
     // Destructure arguments (as this is a quick refactor post-majority-of-project)
@@ -141,7 +156,7 @@ int outputToken(OutputToken t, const bool suppress_generic,
         "T_INTTYPE", "T_LCB", "T_LEFTSHIFT", "T_LEQ", "T_LPAREN", "T_LSB", "T_LT", "T_MINUS", 
         "T_MOD", "T_MULT", "T_NEQ", "T_NOT", "T_NULL", "T_OR", "T_PACKAGE", "T_PLUS", "T_RCB", 
         "T_RETURN", "T_RIGHTSHIFT", "T_RPAREN", "T_RSB", "T_SEMICOLON", "T_STRINGCONSTANT", 
-        "T_STRINGTYPE", "T_TRUE", "T_VAR", "T_VOID", "T_WHILE", "T_WHITESPACE "
+        "T_STRINGTYPE", "T_TRUE", "T_VAR", "T_VOID", "T_WHILE", "T_WHITESPACE"
     };
     constexpr auto error_offset = 300;
     const std::vector<Token> errors { // This could be static for better performance.
@@ -218,7 +233,7 @@ int main (int argc, char* argv[]) {
     long current_line_pos = 0;
     auto ret = EXIT_SUCCESS;
     std::string curr_line;
-    OutputToken whitespace;
+    OutputTokenState whitespace;
     while (lexer.next()) {
         /**
          * Get the lexeme that's been parsed using Flex.
@@ -271,11 +286,41 @@ int main (int argc, char* argv[]) {
             return l;
         }();
 
+        if ((lexer.token == 50 || lexer.token == 51) && group_whitespace) {
+            if (verbose) std::cout << "Found whitespace.\n";
+            if (!whitespace.set) {
+                if (verbose) std::cout << "Wasn't set. Creating.\n";
+                whitespace = OutputTokenState(50, lexeme, curr_line, 
+                                              current_line_pos, prev_line_pos);
+                if (lexer.token == 51) whitespace.lexeme_str = "\\n";
+            }
+            else {
+                if (verbose) std::cout << "Adding the lexeme (" << lexeme << ")";
+                whitespace.cl = curr_line;
+                whitespace.clp = current_line_pos;
+                if (lexer.token == 50) whitespace.lexeme_str += lexeme;
+                else whitespace.lexeme_str += "\\n";
+                if (verbose) std::cout << ", New: " << whitespace.lexeme_str << std::endl;
+            }
+            continue;
+        }
+        else if (whitespace.set) {
+            outputToken(whitespace, suppress_generic, canonical, 
+                        whitespace.cl, whitespace.clp, whitespace.plp); 
+            whitespace = OutputTokenState{};
+        }
+
         if (outputToken({lexer.token, lexeme}, suppress_generic, canonical, curr_line, current_line_pos, prev_line_pos) 
             == EXIT_FAILURE) {
             if (exit_error) return EXIT_FAILURE;
             else ret = EXIT_FAILURE;
         }
     }
+    if (whitespace.set) {
+        outputToken(whitespace, suppress_generic, canonical,
+                    whitespace.cl, whitespace.clp, whitespace.plp); 
+        whitespace = OutputTokenState{};
+    }
+
     return ret;
 }
