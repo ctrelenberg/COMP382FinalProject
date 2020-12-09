@@ -212,7 +212,7 @@ int main (int argc, char* argv[]) {
     // Configuration / command-line arguments.
     std::vector<std::string> args(argv + 1, argv + argc);
     auto escape_trailing_newlines = contains(args, "--literal-newlines");
-    auto exit_error = contains(args, "--exit-errors");
+    auto exit_error = contains(args, "--exit-error");
     auto keep_tabs = contains(args, "--keep-tabs");
     auto canonical = contains(args, "--canonical");
     auto group_whitespace = contains(args, "--group-whitespace");
@@ -304,21 +304,27 @@ int main (int argc, char* argv[]) {
             continue;
         }
         else if (whitespace.set) {
-            outputToken(whitespace, suppress_generic, canonical, 
-                        whitespace.cl, whitespace.clp, whitespace.plp); 
+            if (outputToken(whitespace, suppress_generic, canonical, 
+                        whitespace.cl, whitespace.clp, whitespace.plp)
+                == EXIT_FAILURE)
+            {
+                if (exit_error) return EXIT_FAILURE;
+                else ret = EXIT_FAILURE;
+            }
             whitespace = OutputTokenState{};
         }
 
         if (outputToken({lexer.token, lexeme}, suppress_generic, canonical, curr_line, current_line_pos, prev_line_pos) 
             == EXIT_FAILURE) {
-            std::cout << "hi";
             if (exit_error) return EXIT_FAILURE;
             else ret = EXIT_FAILURE;
         }
     }
     if (whitespace.set) {
-        outputToken(whitespace, suppress_generic, canonical,
-                    whitespace.cl, whitespace.clp, whitespace.plp); 
+        if (outputToken(whitespace, suppress_generic, canonical,
+                    whitespace.cl, whitespace.clp, whitespace.plp) == EXIT_FAILURE) {
+            ret = EXIT_FAILURE;
+        }
         whitespace = OutputTokenState{};
     }
 
