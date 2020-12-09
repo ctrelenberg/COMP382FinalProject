@@ -200,7 +200,7 @@ int outputToken(OutputTokenState t, const bool suppress_generic,
             for (int i = 0; i < prev_line_pos - 1; i++) std::cerr << '~';
             std::cerr << "^\n";
         }
-       
+        return EXIT_FAILURE;
     }
     else {
         std::cerr << "Unexpected token ID: " << token << std::endl; 
@@ -311,6 +311,7 @@ int main (int argc, char* argv[]) {
 
         if (outputToken({lexer.token, lexeme}, suppress_generic, canonical, curr_line, current_line_pos, prev_line_pos) 
             == EXIT_FAILURE) {
+            std::cout << "hi";
             if (exit_error) return EXIT_FAILURE;
             else ret = EXIT_FAILURE;
         }
