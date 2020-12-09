@@ -16,7 +16,7 @@ char_lit_chars [^'\\]
 char_no_nl .
 str (\\[abtvfrn\\\"]|[^\"\\\n])
 
-escaped_char (\\[abtnvfr\\\"])
+escaped_char (\\[abtnvfr\\'\"])
 
 letter [A-Za-z_]
 decimal_digit [0-9]
@@ -212,7 +212,7 @@ int main (int argc, char* argv[]) {
     // Configuration / command-line arguments.
     std::vector<std::string> args(argv + 1, argv + argc);
     auto escape_trailing_newlines = contains(args, "--literal-newlines");
-    auto exit_error = contains(args, "--exiting-errors");
+    auto exit_error = contains(args, "--exit-errors");
     auto keep_tabs = contains(args, "--keep-tabs");
     auto canonical = contains(args, "--canonical");
     auto group_whitespace = contains(args, "--group-whitespace");
