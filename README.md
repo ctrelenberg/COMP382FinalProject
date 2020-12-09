@@ -2,6 +2,10 @@
 
 Created by Christian Trelenberg (300110670) and Michael Bennett (300142749).
 
+## YouTube Link
+
+https://www.youtube.com/watch?v=4O-T4KaTBRg
+
 ### Notes
 
 Code is contained within `decaflex.lex` and `tools.hpp` (helper utilities). `check.sh` can be used to check the current scanner against reference implementation output.
